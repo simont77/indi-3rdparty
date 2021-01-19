@@ -102,6 +102,7 @@ static const char *fallbackShutterSpeeds[] =
     "20",
     "25",
     "30",
+    "120",
     "BULB"
 };
 
@@ -1718,13 +1719,15 @@ gphoto_driver *gphoto_open(Camera *camera, GPContext *context, const char *model
     {
         gphoto->exposureList = parse_shutterspeed(gphoto, gphoto->exposure_widget);
     }
-    else if ((gphoto->exposure_widget = find_widget(gphoto, "capturetarget")))
+    else if ((find_widget(gphoto, "capturetarget")))
     {
-        gphoto_widget tempWidget;
-        const char *choices[2] = { "1/1", "bulb" };
-        tempWidget.choice_cnt = 2;
-        tempWidget.choices = const_cast<char **>(choices);
-        gphoto->exposureList       = parse_shutterspeed(gphoto, &tempWidget);
+        gphoto_widget *tempWidget = (gphoto_widget *)calloc(sizeof(gphoto_widget), 1);
+        tempWidget->choice_cnt = 57;
+        tempWidget->choices = const_cast<char **>(fallbackShutterSpeeds);
+        tempWidget->type = GP_WIDGET_TEXT;
+        tempWidget->name = "FakeExposure";
+        gphoto->exposure_widget = tempWidget;
+        gphoto->exposureList       = parse_shutterspeed(gphoto, gphoto->exposure_widget);       
     }
     else
     {
@@ -1840,6 +1843,16 @@ gphoto_driver *gphoto_open(Camera *camera, GPContext *context, const char *model
 
     if (strstr(gphoto->manufacturer, "Canon"))
         gphoto->supports_temperature = true;
+
+    if (gphoto->iso_widget == nullptr && find_widget(gphoto, "capturetarget"))
+    {
+        gphoto_widget *tempWidget = (gphoto_widget *)calloc(sizeof(gphoto_widget), 1);
+        static const char *fallbackISO[] ={"In Camera"};
+        tempWidget->choice_cnt = 1;
+        tempWidget->choices = const_cast<char **>(fallbackISO);
+        tempWidget->name = "FakeISO";
+        gphoto->iso_widget = tempWidget;
+    }
 
     // Check for user
     if (shutter_release_port)
