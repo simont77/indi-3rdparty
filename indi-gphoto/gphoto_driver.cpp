@@ -45,6 +45,9 @@
 static GPPortInfoList *portinfolist   = nullptr;
 static CameraAbilitiesList *abilities = nullptr;
 
+
+static const char *fallbackISO[] ={"In Camera"}; 
+
 static const char *fallbackShutterSpeeds[] =
 {
     "1/8000",
@@ -1722,9 +1725,9 @@ gphoto_driver *gphoto_open(Camera *camera, GPContext *context, const char *model
     else if ((find_widget(gphoto, "capturetarget")))
     {
         gphoto_widget *tempWidget = (gphoto_widget *)calloc(sizeof(gphoto_widget), 1);
-        tempWidget->choice_cnt = 57;
-        tempWidget->choices = const_cast<char **>(fallbackShutterSpeeds);
-        tempWidget->type = GP_WIDGET_TEXT;
+        tempWidget->choice_cnt = 0;
+        //tempWidget->choices = const_cast<char **>(fallbackShutterSpeeds);
+        //tempWidget->type = GP_WIDGET_TEXT;
         tempWidget->name = "FakeExposure";
         gphoto->exposure_widget = tempWidget;
         gphoto->exposureList       = parse_shutterspeed(gphoto, gphoto->exposure_widget);       
@@ -1847,9 +1850,10 @@ gphoto_driver *gphoto_open(Camera *camera, GPContext *context, const char *model
     if (gphoto->iso_widget == nullptr && find_widget(gphoto, "capturetarget"))
     {
         gphoto_widget *tempWidget = (gphoto_widget *)calloc(sizeof(gphoto_widget), 1);
-        static const char *fallbackISO[] ={"In Camera"};
+        
         tempWidget->choice_cnt = 1;
         tempWidget->choices = const_cast<char **>(fallbackISO);
+        tempWidget->type = GP_WIDGET_TEXT;
         tempWidget->name = "FakeISO";
         gphoto->iso_widget = tempWidget;
     }
@@ -1922,7 +1926,7 @@ int gphoto_close(gphoto_driver *gphoto)
         widget_free(gphoto->exposure_widget);
     if (gphoto->format_widget)
         widget_free(gphoto->format_widget);
-    if (gphoto->iso_widget)
+    if (gphoto->iso_widget && gphoto->iso_widget->type != GP_WIDGET_TEXT)
         widget_free(gphoto->iso_widget);
     if (gphoto->bulb_widget)
         widget_free(gphoto->bulb_widget);
